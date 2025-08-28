@@ -33,15 +33,15 @@
 
 ## ✨ 功能特性
 
-*   **去中心化身份 (DID/钱包登录)**：用户使用钱包直接登录，免注册，链上身份唯一。
-*   **导师评价**：学生可以自由发布评价，数据存储于 IPFS，链上存储哈希保障不可篡改。
-*   **热门导师榜**：基于链上评价聚合，透明可信，无法造假。
-*   **学生积分/NFT 激励**：每次评价都会获得奖励，可兑换 NFT 或特权。
-*   **4 大核心模块**：
-    *   🏠 **首页**：热门导师榜 + 最新评价
-    *   📖 **导师**：搜索/筛选/查看导师详情
-    *   ✍️ **评价**：学生发布/管理评价
-    *   👤 **我的**：钱包、个人信息、奖励
+- **去中心化身份 (DID/钱包登录)**：用户使用钱包直接登录，免注册，链上身份唯一。
+- **导师评价**：学生可以自由发布评价，数据存储于 IPFS，链上存储哈希保障不可篡改。
+- **热门导师榜**：基于链上评价聚合，透明可信，无法造假。
+- **学生积分/NFT 激励**：每次评价都会获得奖励，可兑换 NFT 或特权。
+- **4 大核心模块**：
+  - 🏠 **首页**：热门导师榜 + 最新评价
+  - 📖 **导师**：搜索/筛选/查看导师详情
+  - ✍️ **评价**：学生发布/管理评价
+  - 👤 **我的**：钱包、个人信息、奖励
 
 ---
 
@@ -81,10 +81,58 @@ graph TD
 ```
 
 **数据流示例:**
-1.  **学生在 App 上发布评价** → 内容加密后存储到 IPFS。
-2.  **App 调用合约 `submitReview()`** → 将评价哈希与 IPFS CID 上链。
-3.  **后端服务监听链上事件** → 将数据写入数据库，做索引和聚合。
-4.  **前端通过 API 读取数据** → 展示热门导师榜和最新评价。
+
+1. **学生在 App 上发布评价** → 内容加密后存储到 IPFS。
+2. **App 调用合约 `submitReview()`** → 将评价哈希与 IPFS CID 上链。
+3. **后端服务监听链上事件** → 将数据写入数据库，做索引和聚合。
+4. **前端通过 API 读取数据** → 展示热门导师榜和最新评价。
+
+### 数据结构
+
+#### Mentor - 导师数据
+
+```json
+{
+  "name": "Ivy",
+  "institution": "野鸡大学",
+  "department": "计算机学院",
+  "avatar": "https://avatars.githubusercontent.com/u/103652334?v=4", // optional
+  "created_at": "2025-08-25T15:29:44Z....",
+  "created_by": "xion......",
+  "links": [ "https://github.com/yuchangongzhu" ],
+  "updated_at": "2025-08-25T......",
+  "updated_by": "xion......",
+  "comments": [
+    "cidxxxxxx",
+    "cidyyyyyy"
+  ]
+}
+```
+
+#### User - 用户数据
+
+```json
+{
+  "id": "xion.......",
+  "institution": "xxxxx", // optional, ZK
+  "posted_comments": [
+    "cidxxxxxx",
+    "cidyyyyyy"
+  ]
+}
+```
+
+#### Comment - 评论数据
+
+```json
+{
+  "created_at": "2025-08-28Txxxx",
+  "created_by": "xion......",
+  "rating": 9,
+  "comment": "Ivy老师是世界上最好的老师",
+  "likes": 100 // can be negative
+}
+```
 
 ---
 
@@ -107,6 +155,7 @@ graph TD
 ### 1. 环境准备 (Prerequisites)
 
 确保你已经安装了以下环境：
+
 - [Node.js](https://nodejs.org/) (v18+)
 - [Yarn](https://yarnpkg.com/) 或 `npm`
 - [Docker](https://www.docker.com/) (用于数据库)
@@ -140,11 +189,11 @@ yarn android
 
 我们欢迎任何形式的贡献！请阅读我们的 [CONTRIBUTING.md](CONTRIBUTING.md) 文件了解详情。
 
-1.  Fork 本项目
-2.  创建你的分支 (`git checkout -b feature/AmazingFeature`)
-3.  提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
-4.  推送到分支 (`git push origin feature/AmazingFeature`)
-5.  提交一个 Pull Request
+1. Fork 本项目
+2. 创建你的分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交一个 Pull Request
 
 ---
 
