@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { View, TouchableOpacity, Alert, ScrollView, TextInput, Image, Linking, AppState } from "react-native";
+import { View, TouchableOpacity, Alert, ScrollView, TextInput, Linking, AppState, StyleSheet } from "react-native";
 import {
   useAbstraxionAccount,
   useAbstraxionSigningClient,
@@ -28,7 +28,7 @@ type Profile = {
 
 export default function Profile() {
   // Abstraxion hooks
-  const { data: account, login, isConnected, isConnecting } = useAbstraxionAccount();
+  const { data: account, login, logout, isConnected, isConnecting } = useAbstraxionAccount();
   const { client } = useAbstraxionSigningClient();
   const { client: queryClient } = useAbstraxionClient();
 
@@ -37,8 +37,7 @@ export default function Profile() {
   const borderColor = useThemeColor({}, 'border');
   const textColor = useThemeColor({}, 'text');
   const tintColor = useThemeColor({}, 'tint');
-  const buttonColor = useThemeColor({}, 'button');
-  const buttonTextColor = useThemeColor({}, 'buttonText');
+  const cardColor = useThemeColor({}, 'card');
   const placeholderColor = useThemeColor({}, 'placeholder');
 
   // State variables
@@ -70,13 +69,17 @@ export default function Profile() {
       gap: 20,
     },
     section: {
-      padding: 15,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: borderColor,
+      padding: 20,
+      borderRadius: 16,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      marginHorizontal: 16,
+      marginBottom: 20,
     },
     sectionTitle: {
       marginBottom: 15,
+      color: '#00FF88',
+      fontSize: 18,
+      fontWeight: '600' as const,
     },
     profileHeader: {
       flexDirection: 'row' as const,
@@ -131,21 +134,24 @@ export default function Profile() {
       gap: 10,
     },
     menuButton: {
-      padding: 15,
+      padding: 12,
       borderRadius: 10,
       alignItems: 'center' as const,
-      backgroundColor: buttonColor,
+      backgroundColor: '#00FF88',
     },
     secondaryButton: {
-      backgroundColor: buttonColor,
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)'
     },
     fullWidthButton: {
       width: '100%' as const,
     },
     buttonText: {
-      color: buttonTextColor,
-      fontSize: 16,
-      fontWeight: '500' as const,
+      color: '#0A0A0A',
+      fontSize: 14,
+      fontWeight: '700' as const,
+      letterSpacing: 0.2,
     },
     disabledButton: {
       opacity: 0.5,
@@ -166,7 +172,43 @@ export default function Profile() {
       fontSize: 16,
       color: textColor,
     },
-  }), [backgroundColor, borderColor, textColor, tintColor, buttonColor, buttonTextColor]);
+  }), [backgroundColor, borderColor, textColor, tintColor, cardColor, placeholderColor]);
+
+  // Background ink overlay styles (defined before use)
+  const bgStyles = StyleSheet.create({
+    container: { flex: 1 },
+    inkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,10,10,0.95)' },
+    inkBlob1: { position: 'absolute', top: -80, left: -40, width: 240, height: 240, borderRadius: 120, backgroundColor: 'rgba(255,255,255,0.06)' },
+    inkBlob2: { position: 'absolute', bottom: -60, right: -30, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(255,255,255,0.04)' },
+  });
+
+  // Short address variable removed (not used)
+
+  // Actions
+
+  const handleDisconnect = () => {
+    // Use logout from the component-level hook
+    if (typeof logout === 'function') {
+      Alert.alert(
+        '确认断开连接',
+        '您确定要断开钱包连接吗？',
+        [
+          { text: '取消', style: 'cancel' },
+          { 
+            text: '断开连接', 
+            style: 'destructive',
+            onPress: () => {
+              logout();
+              Alert.alert('已断开连接', '钱包连接已断开');
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert('错误', '无法断开连接，请重试');
+    }
+  };
+
 
   // Fetch profile
   const fetchProfile = async () => {
@@ -313,11 +355,13 @@ export default function Profile() {
   }, [isConnected, account?.bech32Address, queryClient]);
 
   return (
-    <ThemedView style={themedStyles.container}>
+    <View style={[bgStyles.container, { backgroundColor: '#0A0A0A' }]}> 
+      <View style={bgStyles.inkOverlay} />
+      <View style={bgStyles.inkBlob1} />
+      <View style={bgStyles.inkBlob2} />
       <ScrollView 
         contentContainerStyle={themedStyles.contentContainer}
       >
-        <ThemedText type="title" style={themedStyles.title}>My Profile</ThemedText>
 
         {!isConnected ? (
           <View style={themedStyles.connectButtonContainer}>
@@ -327,53 +371,53 @@ export default function Profile() {
               disabled={isConnecting}
             >
               <ThemedText style={themedStyles.buttonText}>
-                {isConnecting ? "Connecting..." : "Connect Wallet"}
+                {isConnecting ? "连接中..." : "连接钱包"}
               </ThemedText>
             </TouchableOpacity>
           </View>
         ) : loading ? (
           <View style={themedStyles.loadingContainer}>
-            <ThemedText style={themedStyles.loadingText}>Loading profile...</ThemedText>
+            <ThemedText style={themedStyles.loadingText}>加载中...</ThemedText>
           </View>
         ) : isEditing ? (
           <View style={themedStyles.mainContainer}>
-            <ThemedView style={themedStyles.section}>
-              <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Display Name</ThemedText>
+            <View style={themedStyles.section}>
+              <ThemedText style={themedStyles.sectionTitle}>昵称</ThemedText>
               <TextInput
                 style={[themedStyles.input, { color: textColor }]}
                 value={editedProfile.displayName}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, displayName: text })}
-                placeholder="Enter display name"
+                placeholder="输入昵称"
                 placeholderTextColor={placeholderColor}
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={themedStyles.section}>
-              <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Bio</ThemedText>
+            <View style={themedStyles.section}>
+              <ThemedText style={themedStyles.sectionTitle}>简介</ThemedText>
               <TextInput
                 style={[themedStyles.input, themedStyles.bioInput, { color: textColor }]}
                 value={editedProfile.bio}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, bio: text })}
-                placeholder="Enter bio"
+                placeholder="输入简介"
                 placeholderTextColor={placeholderColor}
                 multiline
                 numberOfLines={4}
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={themedStyles.section}>
-              <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Avatar URL</ThemedText>
+            <View style={themedStyles.section}>
+              <ThemedText style={themedStyles.sectionTitle}>头像链接</ThemedText>
               <TextInput
                 style={[themedStyles.input, { color: textColor }]}
                 value={editedProfile.avatar}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, avatar: text })}
-                placeholder="Enter avatar URL"
+                placeholder="输入头像链接"
                 placeholderTextColor={placeholderColor}
               />
-            </ThemedView>
+            </View>
 
-            <ThemedView style={themedStyles.section}>
-              <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Social Links</ThemedText>
+            <View style={themedStyles.section}>
+              <ThemedText style={themedStyles.sectionTitle}>社交链接</ThemedText>
               <TextInput
                 style={themedStyles.input}
                 value={editedProfile.socialLinks.twitter || ""}
@@ -381,7 +425,7 @@ export default function Profile() {
                   ...editedProfile,
                   socialLinks: { ...editedProfile.socialLinks, twitter: text }
                 })}
-                placeholder="Twitter URL"
+                placeholder="Twitter 链接"
                 placeholderTextColor="#666"
               />
               <TextInput
@@ -391,7 +435,7 @@ export default function Profile() {
                   ...editedProfile,
                   socialLinks: { ...editedProfile.socialLinks, github: text }
                 })}
-                placeholder="GitHub URL"
+                placeholder="GitHub 链接"
                 placeholderTextColor="#666"
               />
               <TextInput
@@ -401,10 +445,10 @@ export default function Profile() {
                   ...editedProfile,
                   socialLinks: { ...editedProfile.socialLinks, website: text }
                 })}
-                placeholder="Website URL"
+                placeholder="个人网站链接"
                 placeholderTextColor="#666"
               />
-            </ThemedView>
+            </View>
 
             <View style={themedStyles.buttonContainer}>
               <TouchableOpacity
@@ -413,7 +457,7 @@ export default function Profile() {
                 disabled={loading}
               >
                 <ThemedText style={themedStyles.buttonText}>
-                  {loading ? "Saving..." : "Save Changes"}
+                  {loading ? "保存中..." : "保存"}
                 </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -423,41 +467,56 @@ export default function Profile() {
                 }}
                 style={[themedStyles.menuButton, themedStyles.secondaryButton, themedStyles.fullWidthButton]}
               >
-                <ThemedText style={themedStyles.buttonText}>Cancel</ThemedText>
+                <ThemedText style={themedStyles.buttonText}>取消</ThemedText>
               </TouchableOpacity>
             </View>
           </View>
         ) : (
           <View style={themedStyles.mainContainer}>
-            <ThemedView style={themedStyles.section}>
-              <View style={themedStyles.profileHeader}>
-                {profile?.avatar && (
-                  <Image
-                    source={{ uri: profile.avatar }}
-                    style={themedStyles.avatar}
-                  />
-                )}
-                <View style={themedStyles.profileInfo}>
-                  <ThemedText type="title" style={themedStyles.displayName}>
-                    {profile?.displayName || "Anonymous"}
-                  </ThemedText>
-                  <ThemedText style={themedStyles.addressText}>
-                    {account?.bech32Address}
-                  </ThemedText>
+            {/* Header & Wallet */}
+            <View style={themedStyles.section}>
+              <ThemedText type="title" style={{ textAlign: 'center', color: '#00FF88', fontSize: 22, fontWeight: '700', marginBottom: 30, textShadowColor: 'rgba(0,255,136,0.3)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 8 }}>MentorX - Xion Powered</ThemedText>
+              
+              <ThemedText style={{ color: '#CCCCCC', fontSize: 14, marginBottom: 8 }}>钱包地址</ThemedText>
+              <ThemedText style={{ color: '#FFFFFF', fontSize: 12, fontFamily: 'monospace', backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 8, marginBottom: 20 }}>{account?.bech32Address || '未连接'}</ThemedText>
+              
+              <TouchableOpacity onPress={handleDisconnect} style={[themedStyles.menuButton, themedStyles.fullWidthButton]}>
+                <ThemedText style={themedStyles.buttonText}>断开连接</ThemedText>
+              </TouchableOpacity>
+            </View>
+
+            {/* Rewards / Points */}
+            <TouchableOpacity onPress={() => Alert.alert('奖励/积分', '即将上线')}>
+              <View style={themedStyles.section}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <ThemedText style={themedStyles.sectionTitle}>奖励/积分</ThemedText>
+                  <ThemedText style={{ color: '#00FF88', fontSize: 18 }}>{'>'}</ThemedText>
                 </View>
+                <ThemedText style={{ color: '#FFFFFF', fontSize: 16 }}>CAO币: 120</ThemedText>
               </View>
-            </ThemedView>
+            </TouchableOpacity>
+
+            {/* My Reviews */}
+            <TouchableOpacity onPress={() => Alert.alert('我的评价', '即将上线') }>
+              <View style={themedStyles.section}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <ThemedText style={themedStyles.sectionTitle}>我的评价</ThemedText>
+                  <ThemedText style={{ color: '#00FF88', fontSize: 18 }}>{'>'}</ThemedText>
+                </View>
+                <ThemedText style={{ color: '#FFFFFF', fontSize: 16 }}>• 已发布: 5</ThemedText>
+              </View>
+            </TouchableOpacity>
 
             {profile?.bio && (
-              <ThemedView style={themedStyles.section}>
-                <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Bio</ThemedText>
-                <ThemedText style={themedStyles.bioText}>{profile.bio}</ThemedText>
-              </ThemedView>
+              <View style={themedStyles.section}>
+                <ThemedText style={themedStyles.sectionTitle}>简介</ThemedText>
+                <ThemedText style={[themedStyles.bioText, { color: '#FFFFFF' }]}>{profile.bio}</ThemedText>
+              </View>
             )}
 
             {(profile?.socialLinks?.twitter || profile?.socialLinks?.github || profile?.socialLinks?.website) && (
-              <ThemedView style={themedStyles.section}>
-                <ThemedText type="defaultSemiBold" style={themedStyles.sectionTitle}>Social Links</ThemedText>
+              <View style={themedStyles.section}>
+                <ThemedText style={themedStyles.sectionTitle}>社交链接</ThemedText>
                 {profile.socialLinks.twitter && (
                   <TouchableOpacity
                     onPress={() => Linking.openURL(profile.socialLinks.twitter!)}
@@ -479,21 +538,21 @@ export default function Profile() {
                     onPress={() => Linking.openURL(profile.socialLinks.website!)}
                     style={themedStyles.socialLink}
                   >
-                    <ThemedText style={themedStyles.socialLinkText}>Website</ThemedText>
+                    <ThemedText style={themedStyles.socialLinkText}>网站</ThemedText>
                   </TouchableOpacity>
                 )}
-              </ThemedView>
+              </View>
             )}
 
             <TouchableOpacity
               onPress={() => setIsEditing(true)}
               style={[themedStyles.menuButton, themedStyles.fullWidthButton]}
             >
-              <ThemedText style={themedStyles.buttonText}>Edit Profile</ThemedText>
+              <ThemedText style={themedStyles.buttonText}>编辑资料</ThemedText>
             </TouchableOpacity>
           </View>
         )}
       </ScrollView>
-    </ThemedView>
+    </View>
   );
-} 
+}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Animated, Image, ScrollView, Easing } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { View, StyleSheet, TextInput, TouchableOpacity, Animated, Image, ScrollView, Easing, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useRouter } from 'expo-router';
@@ -37,6 +37,43 @@ export default function Home() {
 
   // Hot mentors staggered animation
   const listAnim = useRef(new Animated.Value(0)).current; // 0..1
+
+  // Search state and simple matcher
+  const [query, setQuery] = useState('');
+  const ALL = useMemo(
+    () => [
+      { id: 'zhang-laoshi', name: '张老师', subject: '计算机体系结构', school: '清华大学', tags: ['严谨','逻辑清晰'] },
+      { id: 'li-jiaoshou', name: '李教授', subject: '人工智能导论', school: '北京大学', tags: ['项目驱动','互动多'] },
+      { id: 'wang-boshi', name: '王博士', subject: '分布式系统', school: '上海交通大学', tags: ['案例丰富','考试偏难'] },
+    ],
+    []
+  );
+
+  const handleSearch = () => {
+    const q = query.trim().toLowerCase();
+    if (!q) {
+      // 空查询，默认跳到热门第一名
+      router.push(`/mentor/${ALL[0].id}`);
+      return;
+    }
+    const scored = ALL.map((m) => {
+      const hay = [m.name, m.subject, m.school, ...(m.tags || [])].join(' ').toLowerCase();
+      const idx = hay.indexOf(q);
+      let score = -1;
+      if (idx === 0) score = 3; // 开头匹配优先
+      else if (idx > 0) score = 2; // 包含
+      else if (q.split(/\s+/).some((w) => w && hay.includes(w))) score = 1; // 拆词模糊
+      return { m, score };
+    })
+      .filter((s) => s.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    if (scored.length) {
+      router.push(`/mentor/${scored[0].m.id}`);
+    } else {
+      Alert.alert('未找到匹配导师', '换个关键词试试：姓名/课程/学校');
+    }
+  };
 
   useEffect(() => {
     Animated.sequence([
@@ -107,9 +144,11 @@ export default function Home() {
               onFocus={onFocus}
               onBlur={onBlur}
               returnKeyType="search"
-              onSubmitEditing={() => router.push('/mentor')}
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={handleSearch}
             />
-            <TouchableOpacity onPress={() => router.push('/mentor')} style={styles.searchGo}>
+            <TouchableOpacity onPress={handleSearch} style={styles.searchGo}>
               <ThemedText style={styles.searchGoText}>Go</ThemedText>
             </TouchableOpacity>
           </Animated.View>
@@ -122,25 +161,27 @@ export default function Home() {
             <ThemedText style={[styles.sectionTitle]}>🌟 热门导师榜</ThemedText>
           </View>
           {[
-            { rank: 1, name: '张老师', stars: 5, reviews: 128 },
-            { rank: 2, name: '李教授', stars: 4.5, reviews: 96 },
-            { rank: 3, name: '王博士', stars: 4.5, reviews: 75 },
+            { id: 'zhang-laoshi', rank: 1, name: '张老师', stars: 5, reviews: 128 },
+            { id: 'li-jiaoshou', rank: 2, name: '李教授', stars: 4.5, reviews: 96 },
+            { id: 'wang-boshi', rank: 3, name: '王博士', stars: 4.5, reviews: 75 },
           ].map((m, idx) => {
             const itemOpacity = listAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
             const itemTranslate = listAnim.interpolate({ inputRange: [0, 1], outputRange: [8 * (idx + 1), 0] });
             return (
-              <Animated.View key={m.rank} style={[styles.card, { backgroundColor: card, borderColor: 'rgba(255,255,255,0.1)', opacity: itemOpacity, transform: [{ translateY: itemTranslate }] }]}> 
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View style={styles.rankPill}><ThemedText style={styles.rankText}>#{m.rank}</ThemedText></View>
-                    <ThemedText style={{ marginLeft: 8 }}>{m.name}</ThemedText>
+              <TouchableOpacity key={m.rank} activeOpacity={0.85} onPress={() => router.push(`/mentor/${m.id}`)}>
+                <Animated.View style={[styles.card, { backgroundColor: card, borderColor: 'rgba(255,255,255,0.1)', opacity: itemOpacity, transform: [{ translateY: itemTranslate }] }]}> 
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={styles.rankPill}><ThemedText style={styles.rankText}>#{m.rank}</ThemedText></View>
+                      <ThemedText style={{ marginLeft: 8 }}>{m.name}</ThemedText>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <ThemedText style={{ color: '#FFD166', marginRight: 6 }}>{renderStars(m.stars)}</ThemedText>
+                      <ThemedText style={{ color: '#9BA1A6' }}>{m.reviews} 条评价</ThemedText>
+                    </View>
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <ThemedText style={{ color: '#FFD166', marginRight: 6 }}>{renderStars(m.stars)}</ThemedText>
-                    <ThemedText style={{ color: '#9BA1A6' }}>{m.reviews} 条评价</ThemedText>
-                  </View>
-                </View>
-              </Animated.View>
+                </Animated.View>
+              </TouchableOpacity>
             );
           })}
         </ScrollView>
