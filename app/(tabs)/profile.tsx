@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { View, StyleSheet, TouchableOpacity, Alert, ScrollView, TextInput, Image, Linking, AppState } from "react-native";
+import { View, TouchableOpacity, Alert, ScrollView, TextInput, Image, Linking, AppState } from "react-native";
 import {
   useAbstraxionAccount,
   useAbstraxionSigningClient,
@@ -7,7 +7,6 @@ import {
 } from "@burnt-labs/abstraxion-react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
-import { IconSymbol } from "@/components/ui/IconSymbol";
 import { useThemeColor } from "@/hooks/useThemeColor";
 
 if (!process.env.EXPO_PUBLIC_DOCUSTORE_CONTRACT_ADDRESS) {
@@ -40,6 +39,7 @@ export default function Profile() {
   const tintColor = useThemeColor({}, 'tint');
   const buttonColor = useThemeColor({}, 'button');
   const buttonTextColor = useThemeColor({}, 'buttonText');
+  const placeholderColor = useThemeColor({}, 'placeholder');
 
   // State variables
   const [loading, setLoading] = useState(true);
@@ -344,7 +344,7 @@ export default function Profile() {
                 value={editedProfile.displayName}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, displayName: text })}
                 placeholder="Enter display name"
-                placeholderTextColor={useThemeColor({}, 'placeholder')}
+                placeholderTextColor={placeholderColor}
               />
             </ThemedView>
 
@@ -355,7 +355,7 @@ export default function Profile() {
                 value={editedProfile.bio}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, bio: text })}
                 placeholder="Enter bio"
-                placeholderTextColor={useThemeColor({}, 'placeholder')}
+                placeholderTextColor={placeholderColor}
                 multiline
                 numberOfLines={4}
               />
@@ -368,7 +368,7 @@ export default function Profile() {
                 value={editedProfile.avatar}
                 onChangeText={(text) => setEditedProfile({ ...editedProfile, avatar: text })}
                 placeholder="Enter avatar URL"
-                placeholderTextColor={useThemeColor({}, 'placeholder')}
+                placeholderTextColor={placeholderColor}
               />
             </ThemedView>
 
