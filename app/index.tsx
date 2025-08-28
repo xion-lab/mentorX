@@ -3,6 +3,7 @@ import { useAbstraxionAccount } from "@burnt-labs/abstraxion-react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'expo-router';
 
 // Removed expo-linear-gradient to avoid native module error in current build
 
@@ -22,6 +23,8 @@ export default function Index() {
   const { login, isConnected, isConnecting } = accountApi;
   const logout: (() => void) | undefined = accountApi?.logout;
 
+  const router = useRouter();
+
   // Animated sheen effect over the button (black/white hacker vibe)
   const sheen = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -39,6 +42,13 @@ export default function Index() {
     inputRange: [0, 1],
     outputRange: [-220, 220],
   });
+
+  // Redirect to Home after successful connection
+  useEffect(() => {
+    if (isConnected && !isConnecting) {
+      router.replace('/home');
+    }
+  }, [isConnected, isConnecting, router]);
 
   // Early return: show simple title + connect button when not connected
   if (!isConnected) {
