@@ -53,7 +53,10 @@ export default function RootLayout() {
       <AbstraxionProvider config={treasuryConfig}>
         <NavigationThemeProvider value={systemColorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ title: 'Home', headerShown: true }} />
+            <Stack.Screen name="mentor" options={{ title: 'Mentor', headerShown: true }} />
+            <Stack.Screen name="comment" options={{ title: 'Comment', headerShown: true }} />
+            <Stack.Screen name="profile" options={{ title: 'Profile', headerShown: true }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="auto" />
