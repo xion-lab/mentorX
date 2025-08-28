@@ -102,6 +102,31 @@ export default function Index() {
   const [summary, setSummary] = useState<TodoSummary>({ total: 0, completed: 0, pending: 0 });
   const [newTodoText, setNewTodoText] = useState<string>("");
 
+  // Early return: show simple title + connect button when not connected
+  if (!isConnected) {
+    return (
+      <View style={[styles.container, { backgroundColor }]}> 
+        <ScrollView 
+          style={styles.container}
+          contentContainerStyle={styles.contentContainer}
+        >
+          <ThemedText type="title" style={styles.title}>首页 Home</ThemedText>
+          <View style={styles.connectButtonContainer}>
+            <TouchableOpacity
+              onPress={login}
+              style={[styles.menuButton, styles.fullWidthButton, isConnecting && styles.disabledButton, { backgroundColor: buttonColor }]}
+              disabled={isConnecting}
+            >
+              <ThemedText style={[styles.buttonText, { color: buttonTextColor }]}>
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+
   const copyToClipboard = async (text: string) => {
     try {
       await Clipboard.setString(text);
